@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Philomena Calendar Converter</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+        #result, #conversionResult {
+            text-align: center;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        textarea {
+            flex: 1;
+            width: 100%;
+            border: none;
+            padding: 10px;
+            box-sizing: border-box;
+            resize: none;
+            overflow-y: auto;
+        }
+        .footer {
+            text-align: center;
+            padding: 10px;
+            background-color: #e0e0e0;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+        }
+        label, input, button {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="result"></div>
+
+    <form id="conversionForm">
+        <label for="gregorianDate">Enter Gregorian Date:</label>
+        <input type="date" id="gregorianDate" required>
+        <button type="submit">Convert to Philomena Date</button>
+    </form>
+
+    <div id="conversionResult"></div>
+
+    <textarea readonly id="description">
+The Philomena Calendar:
+- Based on the Gregorian date of August 18, 1989, when Technotronic's "Pump Up the Jam" was released.
+- Uses a 13-month system with each month having exactly 28 days, making each year 364 days long.
+- Adds a Leap Year Day to account for the extra day in leap years, which does not belong to any specific month.
+- Year 0, Month 0, Day 0 in Philomena Calendar corresponds to August 18, 1989, in the Gregorian calendar.
+
+PUJT (Pump Up the Jam Time):
+- A timezone system where Belgium is set as the central point or PUJT+0.
+- All other timezones are then calculated relative to Belgium's time. 
+- For example, GMT would be PUJT-1, EST (Eastern Standard Time) would be PUJT-6.
+
+"Pump Up the Jam":
+- A hit single by the Belgian group Technotronic, released on August 18, 1989.
+- The song became a defining track of the dance-pop genre and was influential in the late '80s and early '90s music scene.
+- It serves as the cultural and chronological anchor for both the Philomena Calendar and PUJT time system.
+
+Philomena Cunk:
+- A fictional character portrayed by British comedian Diane Morgan.
+- Known for her mockumentary series like "Cunk on Britain" and "Cunk on Earth", where she humorously misinterprets history with a mix of ignorance and confidence.
+- In "Cunk on Earth", she repeatedly uses "Pump Up the Jam" as a running gag, inserting the song and nonsensical facts about it into discussions of unrelated historical events, satirizing the way documentaries sometimes use music or irrelevant clips.
+
+The "Pump Up the Jam" Joke:
+- In the series, each episode features a segment where Cunk segues into the song "Pump Up the Jam" with bizarre, incorrect "facts" about it, like claiming it has the same BPM as a cat's resting heartbeat or that it's Canada's national anthem. This humor underscores her character's cluelessness while providing comic relief amidst the documentary format.
+
+The months of the Philomena Calendar are:
+- January
+- February
+- March
+- April
+- May
+- June
+- Sol
+- July
+- August
+- September
+- October
+- November
+- December
+    </textarea>
+
+    <div class="footer"></div>
+
+    <script>
+        function isLeapYear(year) {
+            return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+        }
+
+        function daysBetweenDates(fromDate, toDate) {
+            let oneDay = 1000 * 60 * 60 * 24;
+            let diffInMs = toDate - fromDate;
+            let days = Math.floor(diffInMs / oneDay);
+            
+            // Adjust for leap year day if fromDate is before March 1st in a leap year
+            if (isLeapYear(fromDate.getFullYear()) && fromDate.getMonth() < 2) {
+                days++;
+            }
+            
+            // Adjust for leap year day if toDate is after February 29th in a leap year
+            if (isLeapYear(toDate.getFullYear()) && toDate.getMonth() > 1) {
+                days++;
+            }
+            
+            return days;
+        }
+
+        function convertToPhilomena(gregorianDate) {
+            const baseDate = new Date(1989, 7, 18); // months are 0-indexed in JS, so 7 for August
+            let daysSinceBase = daysBetweenDates(baseDate, gregorianDate);
+            
+            let yearPC, monthPC, dayPC;
+
+            // Special case for the base date itself
+            if (daysSinceBase === 0) {
+                return {
+                    year: 0,
+                    month: 0,
+                    monthName: "January",
+                    day: 0,
+                    time: "00:00",
+                    timezone: "PUJT+0"
+                };
+            }
+
+            if (daysSinceBase > 0) {
+                yearPC = Math.floor(daysSinceBase / 364);
+                let dayOfYear = daysSinceBase % 364;
+                
+                monthPC = Math.floor(dayOfYear / 28);
+                dayPC = dayOfYear % 28;
+
+                if (dayOfYear >= 364) {
+                    yearPC++;
+                    dayOfYear = 0; // Leap Year Day
+                }
+            } else {
+                // For dates before the base date
+                let daysBeforeBase = -daysSinceBase;
+                yearPC = -Math.floor(daysBeforeBase / 364) - 1; // -1 because we're counting backwards
+                let remainingDays = daysBeforeBase % 364;
+
+                // Adjust for leap year if necessary
+                if (remainingDays === 0 && daysBeforeBase !== 0) {
+                    yearPC++;  // We've gone back one more year due to the leap year day
+                    remainingDays = 364;
+                }
+
+                // Calculate month and day from remaining days
+                monthPC = Math.floor((364 - remainingDays) / 28);  // Counting backwards
+                dayPC = (28 - (remainingDays % 28)) % 28;  // Ensure positive and within range
+                if (dayPC === 0) {
+                    dayPC = 28;
+                    monthPC = (monthPC - 1 + 13) % 13;  // Wrap around to previous month if necessary
+                }
+                monthPC = (monthPC + 13) % 13;  // Ensure month is positive
+            }
+
+            // Month names from the International Fixed Calendar (Wikipedia)
+            const monthNames = [
+                "January", "February", "March", "April", "May", "June", "Sol", 
+                "July", "August", "September", "October", "November", "December"
+            ];
+            
+            let localHours = gregorianDate.getHours();
+            let timezoneOffsetMinutes = gregorianDate.getTimezoneOffset(); // in minutes, positive for timezones west of UTC
+            let pujtOffset = -timezoneOffsetMinutes / 60; // Convert minutes to hours
+            let pujtHours = (localHours + pujtOffset + 24) % 24; // Normalize time
+            let localMinutes = String(gregorianDate.getMinutes()).padStart(2, '0');
+
+            return {
+                year: yearPC,
+                month: monthPC,
+                monthName: monthNames[monthPC],
+                day: dayPC,
+                time: `${String(pujtHours).padStart(2, '0')}:${localMinutes}`,
+                timezone: `PUJT${pujtOffset < 0 ? pujtOffset : '+' + pujtOffset}`
+            };
+        }
+
+        // Display current time in Philomena Calendar and PUJT
+        const now = new Date();
+        const result = convertToPhilomena(now);
+
+        document.getElementById('result').innerText = 
+            // `Current Date in Gregorian:\nYear ${now.getFullYear()}, Month ${now.getMonth() + 1} (${now.toLocaleString('default', { month: 'long' })}), Day ${now.getDate()}\n` +
+            `Current Date in Philomena:\nYear ${result.year}, Month ${result.month} (${result.monthName}), Day ${result.day}\n`; // + `Time in PUJT: ${result.time} ${result.timezone}`;
+
+        // Conversion form event listener
+        document.getElementById('conversionForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            gregorianDateInput = new Date(document.getElementById('gregorianDate').value);
+            gregorianDateInput.setDate(gregorianDateInput.getDate() + 1); // the date selection value is 1 day behind
+            const convertedDate = convertToPhilomena(gregorianDateInput);
+
+            document.getElementById('conversionResult').innerText = 
+                `Converted Date in Philomena:\nYear ${convertedDate.year}, Month ${convertedDate.month} (${convertedDate.monthName}), Day ${convertedDate.day}`;
+        });
+
+        // Footer
+        const currentYearPC = result.year;
+        const siteCreationYearPC = currentYearPC > 36 ? ` - ${currentYearPC}` : '';
+        
+        document.querySelector('.footer').innerText = `Site Code Created by Grok - 36${siteCreationYearPC}`;
+        
+        // Citation for month names
+        document.body.insertAdjacentHTML('beforeend', 
+            `<p style="text-align:center; font-size:0.8em;">13 Month Year sourced from: <a href="https://en.wikipedia.org/wiki/International_Fixed_Calendar" target="_blank">Wikipedia - International Fixed Calendar</a></p>`
+        );
+    </script>
+</body>
+</html>
