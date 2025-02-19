@@ -30,6 +30,17 @@
             overflow-y: auto;
             background-color: #fafafa;
         }
+        #description {
+            flex: 1;
+            width: 100%;
+            border: none;
+            padding: 10px;
+            box-sizing: border-box;
+            overflow-y: auto;
+            background-color: #fafafa;
+            white-space: pre-wrap; /* Preserves line breaks */
+            font-family: inherit; /* Matches textarea font */
+        }
         .footer {
             text-align: center;
             padding: 10px;
@@ -69,39 +80,39 @@
 
     <div id="conversionResult"></div>
 
-    <textarea readonly id="description">
-The Philomena Calendar:
-- Based on the Gregorian date of August 18, 1989, when Technotronic's "Pump Up the Jam" was released.
-- Uses a 13-month system with each month having exactly 28 days, totaling 364 days per year.
-- Adds a Leap Year Day at the end of leap years, which does not belong to any month.
-- Year 0, Month 0, Day 0 corresponds to August 18, 1989.
-- For dates before August 18, 1989, years are denoted as "BC" meaning "Before Cunk", counting backwards (e.g., August 17, 1989, is in Year 1 BC).
-
-PUJT (Pump Up the Jam Time):
-- A timezone system where Belgium (GMT+1) is PUJT+0.
-- GMT is PUJT-1, EST is PUJT-6, etc., calculated relative to Belgium.
-
-"Pump Up the Jam":
-- Released by Technotronic on August 18, 1989, this song anchors the Philomena Calendar and PUJT system.
-
-Philomena Cunk:
-- A fictional character by Diane Morgan, known for humorous mockumentaries, often referencing "Pump Up the Jam" as a gag.
-
-Months of the Philomena Calendar:
-- January
-- February
-- March
-- April
-- May
-- June
-- Sol
-- July
-- August
-- September
-- October
-- November
-- December
-    </textarea>
+    <div id="description">
+        The Philomena Calendar:
+        - Based on the Gregorian date of August 18, 1989, when Technotronic's "Pump Up the Jam" was released.
+        - Uses a 13-month system with each month having exactly 28 days, totaling 364 days per year.
+        - Adds a Leap Year Day at the end of leap years, which does not belong to any month.
+        - Year 0, Month 0, Day 0 corresponds to August 18, 1989.
+        - For dates before August 18, 1989, years are denoted as "BC" meaning "Before Cunk", counting backwards (e.g., August 17, 1989, is in Year 1 BC).
+        
+        PUJT (Pump Up the Jam Time):
+        - A timezone system where Belgium (GMT+1) is PUJT+0.
+        - GMT is PUJT-1, EST is PUJT-6, etc., calculated relative to Belgium.
+        
+        "Pump Up the Jam":
+        - Released by Technotronic on August 18, 1989, this song anchors the Philomena Calendar and PUJT system.
+        
+        Philomena Cunk:
+        - A fictional character by Diane Morgan, known for humorous mockumentaries, often referencing "Pump Up the Jam" as a gag as seen <a href="https://youtu.be/-Su287HvJRQ" target="_blank">here</a>.
+        
+        Months of the Philomena Calendar:
+        - January
+        - February
+        - March
+        - April
+        - May
+        - June
+        - Dia (formerly Sol, renamed in honor of Diane Morgan)
+        - July
+        - August
+        - September
+        - October
+        - November
+        - December
+    </div>
 
     <div class="footer"></div>
     <p style="text-align:center; font-size:0.8em;">
@@ -182,7 +193,7 @@ Months of the Philomena Calendar:
                 month = Math.floor(dayWithinYear / 28);
                 day = dayWithinYear % 28;
                 const monthNames = [
-                    "January", "February", "March", "April", "May", "June", "Sol",
+                    "January", "February", "March", "April", "May", "June", "Dia",
                     "July", "August", "September", "October", "November", "December"
                 ];
                 monthName = monthNames[month];
@@ -212,7 +223,7 @@ Months of the Philomena Calendar:
         // Display current date and time
         const now = new Date();
         const currentResult = convertToPhilomena(now);
-        document.getElementById('result').innerText = 
+        document.getElementById('result').innerText =
             `Current Date in Philomena:\nYear ${currentResult.year}, Month ${currentResult.month} (${currentResult.monthName}), Day ${currentResult.day}\n` +
             `Time in PUJT: ${currentResult.pujtTime} ${currentResult.pujtTimezone}`;
 
@@ -223,13 +234,12 @@ Months of the Philomena Calendar:
             const [year, month, day] = value.split('-').map(Number);
             const gregorianDateInput = new Date(year, month - 1, day, 0, 0, 0); // Set to midnight local time
             const convertedDate = convertToPhilomena(gregorianDateInput);
-            document.getElementById('conversionResult').innerText = 
-                `Converted Date in Philomena:\nYear ${convertedDate.year}, Month ${convertedDate.month} (${convertedDate.monthName}), Day ${convertedDate.day}\n` +
-                `Time at midnight in PUJT: ${convertedDate.pujtTime} ${convertedDate.pujtTimezone}`;
+            document.getElementById('conversionResult').innerText =
+                `Converted Date in Philomena:\nYear ${convertedDate.year}, Month ${convertedDate.month} (${convertedDate.monthName}), Day ${convertedDate.day}`;
         });
 
         // Update footer
-        const currentYearPC = convertToPhilomena(now).year;
+        const currentYearPC = currentResult.year;
         const siteCreationYearPC = currentYearPC > 35 ? ` - ${currentYearPC}` : '';
         document.querySelector('.footer').innerText = `Site Code Created by Grok - 35${siteCreationYearPC}`;
     </script>
