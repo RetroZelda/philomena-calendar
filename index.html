@@ -75,6 +75,7 @@ The Philomena Calendar:
 - Uses a 13-month system with each month having exactly 28 days, totaling 364 days per year.
 - Adds a Leap Year Day at the end of leap years, which does not belong to any month.
 - Year 0, Month 0, Day 0 corresponds to August 18, 1989.
+- For dates before August 18, 1989, years are denoted as "BC" meaning "Before Cunk", counting backwards (e.g., August 17, 1989, is in Year 1 BC).
 
 PUJT (Pump Up the Jam Time):
 - A timezone system where Belgium (GMT+1) is PUJT+0.
@@ -120,7 +121,6 @@ Months of the Philomena Calendar:
         // Calculate exact days between two dates
         function daysBetweenDates(fromDate, toDate) {
             const oneDay = 1000 * 60 * 60 * 24;
-            // Ensure dates are at midnight to avoid time-of-day issues
             const from = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate());
             const to = new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate());
             return Math.floor((to - from) / oneDay);
@@ -145,7 +145,8 @@ Months of the Philomena Calendar:
                     currentDate.setTime(currentDate.getTime() + yearLength * 86400000);
                     year++;
                 }
-                return { year, dayWithinYear: daysSinceBase - cumulativeDays };
+                const dayWithinYear = daysSinceBase - cumulativeDays;
+                return { year, dayWithinYear, startDate: currentDate };
             } else {
                 year = -1;
                 while (true) {
@@ -160,7 +161,8 @@ Months of the Philomena Calendar:
                     cumulativeDays = prevCumulative;
                     year--;
                 }
-                return { year, dayWithinYear: daysSinceBase - cumulativeDays };
+                const dayWithinYear = daysBetweenDates(currentDate, date);
+                return { year, dayWithinYear, startDate: currentDate };
             }
         }
 
@@ -168,8 +170,8 @@ Months of the Philomena Calendar:
         function convertToPhilomena(gregorianDate) {
             const baseDate = new Date(1989, 7, 18); // August 18, 1989
             const { year, dayWithinYear } = getPhilomenaYear(gregorianDate, baseDate);
-            const approxStartYear = 1989 + year;
-            const isLeap = isLeapYear(approxStartYear + 1);
+            const approxEndYear = 1989 + year + 1;
+            const isLeap = isLeapYear(approxEndYear);
 
             let month, day, monthName;
             if (isLeap && dayWithinYear === 364) {
@@ -195,8 +197,10 @@ Months of the Philomena Calendar:
             const pujtTimezoneOffset = localUTCOffset - 1; // Relative to Belgium (PUJT+0 = UTC+1)
             const pujtTimezoneLabel = `PUJT${pujtTimezoneOffset >= 0 ? '+' + pujtTimezoneOffset : pujtTimezoneOffset}`;
 
+            const yearDisplay = year < 0 ? `${-year} BC` : year;
+
             return {
-                year,
+                year: yearDisplay,
                 month,
                 monthName,
                 day,
@@ -225,7 +229,7 @@ Months of the Philomena Calendar:
         });
 
         // Update footer
-        const currentYearPC = currentResult.year;
+        const currentYearPC = convertToPhilomena(now).year;
         const siteCreationYearPC = currentYearPC > 35 ? ` - ${currentYearPC}` : '';
         document.querySelector('.footer').innerText = `Site Code Created by Grok - 35${siteCreationYearPC}`;
     </script>
