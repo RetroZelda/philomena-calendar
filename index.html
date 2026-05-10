@@ -1,247 +1,999 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Philomena Calendar Converter</title>
-    <style>
-        body {
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-        }
-        #result, #conversionResult {
-            text-align: center;
-            padding: 20px;
-            background-color: #f0f0f0;
-            margin: 10px;
-            border-radius: 5px;
-        }
-        textarea {
-            flex: 1;
-            width: 100%;
-            border: none;
-            padding: 10px;
-            box-sizing: border-box;
-            resize: none;
-            overflow-y: auto;
-            background-color: #fafafa;
-        }
-        #description {
-            flex: 1;
-            width: 100%;
-            border: none;
-            padding: 10px;
-            box-sizing: border-box;
-            overflow-y: auto;
-            background-color: #fafafa;
-            white-space: pre-wrap; /* Preserves line breaks */
-            font-family: inherit; /* Matches textarea font */
-        }
-        .footer {
-            text-align: center;
-            padding: 10px;
-            background-color: #e0e0e0;
-            margin-top: auto;
-        }
-        form {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 10px;
-        }
-        label, input, button {
-            margin: 5px 0;
-        }
-        button {
-            padding: 5px 10px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Philomena Calendar — PUJT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c0a10;
+    --bg-2: #15121c;
+    --bg-3: #1d1827;
+    --line: #2a2335;
+    --line-2: #38304a;
+    --fg: #f4f0e8;
+    --fg-dim: #a097b0;
+    --fg-faint: #6b6478;
+    --accent: #ff3d8b;
+    --accent-2: #ff7ab0;
+    --accent-glow: rgba(255, 61, 139, 0.35);
+    --leap: #ffd166;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: 'Space Grotesk', sans-serif;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* subtle grid backdrop */
+  body::before {
+    content: "";
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+    background-size: 64px 64px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  body::after {
+    content: "";
+    position: fixed; inset: 0;
+    background: radial-gradient(ellipse 800px 600px at 80% -10%, rgba(255,61,139,0.08), transparent 60%),
+                radial-gradient(ellipse 700px 500px at 0% 100%, rgba(122,80,255,0.06), transparent 55%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 40px 32px 80px;
+  }
+
+  /* Topbar */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 56px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .brand-mark {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px var(--bg), 0 0 0 4px var(--accent), 0 0 36px var(--accent-glow);
+    position: relative;
+  }
+  .brand-mark::after {
+    content: "";
+    position: absolute;
+    inset: 10px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 2px solid var(--accent);
+  }
+  .brand-text { line-height: 1.1; }
+  .brand-text .t1 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    color: var(--fg-dim);
+    text-transform: uppercase;
+  }
+  .brand-text .t2 {
+    font-weight: 600;
+    font-size: 18px;
+    letter-spacing: -0.01em;
+  }
+  .tz-picker {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 8px 8px 8px 16px;
+  }
+  .tz-picker label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    color: var(--fg-faint);
+    text-transform: uppercase;
+  }
+  .tz-picker select {
+    background: var(--bg-3);
+    border: 1px solid var(--line);
+    color: var(--fg);
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    outline: none;
+  }
+  .tz-picker select:focus { border-color: var(--accent); }
+
+  /* Hero */
+  .hero {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 32px;
+    margin-bottom: 64px;
+    align-items: stretch;
+  }
+  .clock-card {
+    background: linear-gradient(180deg, var(--bg-2), var(--bg-3));
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    padding: 36px 40px 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .clock-card::before {
+    content: "";
+    position: absolute;
+    top: -1px; left: 24px; right: 24px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0.7;
+  }
+  .clock-eyebrow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    color: var(--fg-dim);
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+  .live-dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--accent-glow);
+    animation: pulse 1.6s ease-in-out infinite;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+  }
+  .clock-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: clamp(48px, 8vw, 96px);
+    line-height: 1;
+    letter-spacing: -0.04em;
+    color: var(--fg);
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .clock-time .ms {
+    font-size: 0.32em;
+    color: var(--accent);
+    font-weight: 500;
+    letter-spacing: 0;
+    width: 3ch;
+  }
+  .clock-meta {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin-top: 22px;
+    padding-top: 22px;
+    border-top: 1px dashed var(--line-2);
+  }
+  .clock-meta .chip {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--fg-dim);
+    text-transform: uppercase;
+  }
+  .clock-meta .chip b {
+    color: var(--fg);
+    font-weight: 500;
+    margin-left: 6px;
+  }
+
+  .date-card {
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+  }
+  .date-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    color: var(--fg-dim);
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+  .date-stack { display: flex; flex-direction: column; gap: 10px; }
+  .date-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .date-row:last-child { border-bottom: none; }
+  .date-row .k {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    color: var(--fg-faint);
+    text-transform: uppercase;
+  }
+  .date-row .v {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    text-align: right;
+  }
+  .date-row .v.mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--fg-dim);
+  }
+  .date-row .v .accent { color: var(--accent); }
+
+  /* Calendar */
+  .cal {
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    overflow: hidden;
+  }
+  .cal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 28px;
+    border-bottom: 1px solid var(--line);
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .cal-title {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+  }
+  .cal-title .month-name {
+    font-size: 32px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  .cal-title .month-name.dia {
+    color: var(--accent);
+  }
+  .cal-title .year-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    color: var(--fg-dim);
+    text-transform: uppercase;
+  }
+  .cal-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .cal-nav button {
+    background: var(--bg-3);
+    border: 1px solid var(--line);
+    color: var(--fg);
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .cal-nav button:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .cal-nav .today-btn {
+    width: auto;
+    padding: 0 14px;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  /* Month tabs */
+  .month-strip {
+    display: flex;
+    overflow-x: auto;
+    border-bottom: 1px solid var(--line);
+    padding: 0 16px;
+    scrollbar-width: thin;
+  }
+  .month-strip::-webkit-scrollbar { height: 4px; }
+  .month-strip::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 2px; }
+  .month-tab {
+    flex-shrink: 0;
+    padding: 14px 18px;
+    background: none;
+    border: none;
+    color: var(--fg-faint);
+    cursor: pointer;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: color 0.15s ease;
+    white-space: nowrap;
+  }
+  .month-tab .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--fg-faint);
+    background: var(--bg-3);
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: all 0.15s ease;
+  }
+  .month-tab:hover { color: var(--fg-dim); }
+  .month-tab.active {
+    color: var(--fg);
+    border-bottom-color: var(--accent);
+  }
+  .month-tab.active .num {
+    background: var(--accent);
+    color: var(--bg);
+  }
+  .month-tab.dia .num { color: var(--accent); }
+  .month-tab.dia.active .num { color: var(--bg); }
+  .month-tab.leap {
+    color: var(--leap);
+  }
+  .month-tab.leap.active {
+    border-bottom-color: var(--leap);
+  }
+  .month-tab.leap .num {
+    background: rgba(255, 209, 102, 0.15);
+    color: var(--leap);
+  }
+
+  /* Calendar grid */
+  .cal-body {
+    padding: 24px 28px 28px;
+  }
+  .weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .weekday {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    color: var(--fg-faint);
+    text-transform: uppercase;
+    padding: 4px 0;
+    text-align: center;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+  }
+  .day {
+    aspect-ratio: 1.05 / 1;
+    background: var(--bg-3);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    overflow: hidden;
+  }
+  .day:hover {
+    border-color: var(--line-2);
+    transform: translateY(-1px);
+  }
+  .day .dnum {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 22px;
+    letter-spacing: -0.02em;
+    color: var(--fg);
+    line-height: 1;
+  }
+  .day .greg {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--fg-faint);
+    letter-spacing: 0.04em;
+  }
+  .day.today {
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent), 0 8px 32px var(--accent-glow);
+  }
+  .day.today .dnum { color: var(--bg); }
+  .day.today .greg { color: rgba(12, 10, 16, 0.7); }
+  .day.today::before {
+    content: "TODAY";
+    position: absolute;
+    top: 8px; right: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 0.18em;
+    color: var(--bg);
+    font-weight: 700;
+  }
+  .day.selected {
+    border-color: var(--accent);
+  }
+  .day.leap-day {
+    grid-column: span 7;
+    aspect-ratio: auto;
+    padding: 18px 22px;
+    background: linear-gradient(135deg, rgba(255,209,102,0.1), rgba(255,209,102,0.04));
+    border-color: rgba(255, 209, 102, 0.3);
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .day.leap-day .dnum { color: var(--leap); font-size: 28px; }
+  .day.leap-day .leap-label {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px;
+    color: var(--leap);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+
+  /* Footer */
+  .foot {
+    margin-top: 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--fg-faint);
+  }
+  .foot .anchor {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .foot .anchor::before {
+    content: "▶";
+    color: var(--accent);
+    font-size: 9px;
+  }
+  .foot .links {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .foot a {
+    color: var(--fg-faint);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+  .foot a:hover { color: var(--accent); }
+
+  @media (max-width: 880px) {
+    .hero { grid-template-columns: 1fr; }
+    .wrap { padding: 24px 16px 60px; }
+    .day { padding: 6px 8px; }
+    .day .dnum { font-size: 16px; }
+    .day .greg { font-size: 8px; }
+    .topbar { flex-direction: column; gap: 16px; align-items: flex-start; }
+  }
+</style>
 </head>
 <body>
-    <div id="result"></div>
+  <div class="wrap">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark"></div>
+        <div class="brand-text">
+          <div class="t1">PUJT // Standard Time</div>
+          <div class="t2">The Philomena Calendar</div>
+        </div>
+      </div>
+      <div class="tz-picker">
+        <label for="tz">Your zone</label>
+        <select id="tz"></select>
+      </div>
+    </header>
 
-    <form id="conversionForm">
-        <label for="gregorianDate">Enter Gregorian Date:</label>
-        <input type="date" id="gregorianDate" required>
-        <button type="submit">Convert to Philomena Date</button>
-    </form>
+    <section class="hero">
+      <div class="clock-card">
+        <div class="clock-eyebrow">
+          <span><span class="live-dot"></span>LIVE · <span id="tz-label">LOCAL TIME</span></span>
+          <span id="pujt-offset">PUJT+0</span>
+        </div>
+        <div class="clock-time">
+          <span id="t-hms">00:00:00</span><span class="ms" id="t-ms">.000</span>
+        </div>
+        <div class="clock-meta">
+          <span class="chip">Belgium-anchored<b>GMT+1</b></span>
+          <span class="chip">Local offset<b id="local-offset">—</b></span>
+          <span class="chip">Day of year<b id="doy">—</b></span>
+        </div>
+      </div>
 
-    <div id="conversionResult"></div>
+      <div class="date-card">
+        <div class="date-eyebrow">Today, in Philomena</div>
+        <div class="date-stack">
+          <div class="date-row">
+            <span class="k">Year</span>
+            <span class="v" id="ph-year"><span class="accent">—</span></span>
+          </div>
+          <div class="date-row">
+            <span class="k">Month</span>
+            <span class="v" id="ph-month">—</span>
+          </div>
+          <div class="date-row">
+            <span class="k">Day</span>
+            <span class="v" id="ph-day">—</span>
+          </div>
+          <div class="date-row">
+            <span class="k">Stamp</span>
+            <span class="v mono" id="ph-stamp">—</span>
+          </div>
+        </div>
+      </div>
+    </section>
 
-    <div id="description">
-        The Philomena Calendar:
-        - Based on the Gregorian date of August 18, 1989, when Technotronic's "Pump Up the Jam" was released.
-        - Uses a 13-month system with each month having exactly 28 days, totaling 364 days per year.
-        - Adds a Leap Year Day at the end of leap years, which does not belong to any month.
-        - Year 0, Month 0, Day 0 corresponds to August 18, 1989.
-        - For dates before August 18, 1989, years are denoted as "BC" meaning "Before Cunk", counting backwards (e.g., August 17, 1989, is in Year 1 BC).
-        
-        PUJT (Pump Up the Jam Time):
-        - A timezone system where Belgium (GMT+1) is PUJT+0.
-        - GMT is PUJT-1, EST is PUJT-6, etc., calculated relative to Belgium.
-        
-        "Pump Up the Jam":
-        - Released by Technotronic on August 18, 1989, this song anchors the Philomena Calendar and PUJT system.
-        
-        Philomena Cunk:
-        - A fictional character by Diane Morgan, known for humorous mockumentaries, often referencing "Pump Up the Jam" as a gag as seen <a href="https://youtu.be/-Su287HvJRQ" target="_blank">here</a>.
-        
-        Months of the Philomena Calendar:
-        - January
-        - February
-        - March
-        - April
-        - May
-        - June
-        - Dia (formerly Sol, renamed in honor of Diane Morgan)
-        - July
-        - August
-        - September
-        - October
-        - November
-        - December
-    </div>
+    <section class="cal">
+      <div class="cal-head">
+        <div class="cal-title">
+          <span class="month-name" id="cal-month">—</span>
+          <span class="year-tag" id="cal-year">—</span>
+        </div>
+        <div class="cal-nav">
+          <button id="prev-year" title="Previous year">«</button>
+          <button id="prev-month" title="Previous month">‹</button>
+          <button class="today-btn" id="today-btn">Today</button>
+          <button id="next-month" title="Next month">›</button>
+          <button id="next-year" title="Next year">»</button>
+        </div>
+      </div>
 
-    <div class="footer"></div>
-    <p style="text-align:center; font-size:0.8em;">
-        <strong>13 Month Year sourced from: </strong> 
-        <a href="https://en.wikipedia.org/wiki/International_Fixed_Calendar" target="_blank">Wikipedia - International Fixed Calendar</a>
-        <br>
-        <strong>Site Source: </strong> 
-        <a href="https://github.com/RetroZelda/philomena-calendar" target="_blank">GitHub - Philomena Calendar</a>
-    </p>
+      <div class="month-strip" id="month-strip"></div>
 
-    <script>
-        // Helper function to check if a year is a leap year (Gregorian rules)
-        function isLeapYear(year) {
-            return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
-        }
+      <div class="cal-body">
+        <div class="weekdays" id="weekdays"></div>
+        <div class="grid" id="grid"></div>
+      </div>
+    </section>
 
-        // Calculate exact days between two dates
-        function daysBetweenDates(fromDate, toDate) {
-            const oneDay = 1000 * 60 * 60 * 24;
-            const from = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate());
-            const to = new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate());
-            return Math.floor((to - from) / oneDay);
-        }
+    <footer class="foot">
+      <div class="anchor">Anchor: 18 Aug 1989, 00:00 PUJT — Year 0, January 0</div>
+      <div>13 months · 28 days · 364 + leap</div>
+      <div class="links">
+        <a href="https://en.wikipedia.org/wiki/International_Fixed_Calendar" target="_blank">IFC on Wikipedia</a>
+        <a href="https://youtu.be/-Su287HvJRQ" target="_blank">Philomena &amp; PUTJ</a>
+        <a href="https://github.com/RetroZelda/philomena-calendar" target="_blank">GitHub Source</a>
+      </div>
+    </footer>
+  </div>
 
-        // Get Philomena year and day within year for a given date
-        function getPhilomenaYear(date, baseDate) {
-            const daysSinceBase = daysBetweenDates(baseDate, date);
-            let year = 0;
-            let cumulativeDays = 0;
-            let currentDate = new Date(baseDate);
+<script>
+/* ---------- Philomena Calendar core ---------- */
 
-            if (daysSinceBase >= 0) {
-                while (true) {
-                    const currentYear = currentDate.getFullYear();
-                    const isNextLeap = isLeapYear(currentYear + 1);
-                    const yearLength = isNextLeap ? 365 : 364;
-                    if (cumulativeDays + yearLength > daysSinceBase) {
-                        break;
-                    }
-                    cumulativeDays += yearLength;
-                    currentDate.setTime(currentDate.getTime() + yearLength * 86400000);
-                    year++;
-                }
-                const dayWithinYear = daysSinceBase - cumulativeDays;
-                return { year, dayWithinYear, startDate: currentDate };
-            } else {
-                year = -1;
-                while (true) {
-                    const currentYear = currentDate.getFullYear();
-                    const isPrevLeap = isLeapYear(currentYear - 1);
-                    const yearLength = isPrevLeap ? 365 : 364;
-                    const prevCumulative = cumulativeDays - yearLength;
-                    currentDate.setTime(currentDate.getTime() - yearLength * 86400000);
-                    if (prevCumulative <= daysSinceBase) {
-                        break;
-                    }
-                    cumulativeDays = prevCumulative;
-                    year--;
-                }
-                const dayWithinYear = daysBetweenDates(currentDate, date);
-                return { year, dayWithinYear, startDate: currentDate };
-            }
-        }
+const MONTHS = [
+  "January","February","March","April","May","June",
+  "Dia","July","August","September","October","November","December"
+];
+const WEEKDAYS = ["DAY 1","DAY 2","DAY 3","DAY 4","DAY 5","DAY 6","DAY 7"];
 
-        // Convert Gregorian date to Philomena date and PUJT time
-        function convertToPhilomena(gregorianDate) {
-            const baseDate = new Date(1989, 7, 18); // August 18, 1989
-            const { year, dayWithinYear } = getPhilomenaYear(gregorianDate, baseDate);
-            const approxEndYear = 1989 + year + 1;
-            const isLeap = isLeapYear(approxEndYear);
+// Anchor: Aug 18, 1989 00:00 PUJT.
+// PUJT = Belgium standard (GMT+1). So anchor in UTC = Aug 17, 1989 23:00 UTC.
+const ANCHOR_UTC_MS = Date.UTC(1989, 7, 17, 23, 0, 0, 0);
+const PUJT_OFFSET_MIN = 60; // PUJT is UTC+1
+const MS_PER_DAY = 86400000;
 
-            let month, day, monthName;
-            if (isLeap && dayWithinYear === 364) {
-                month = -1;
-                day = 0;
-                monthName = "Leap Year Day";
-            } else {
-                month = Math.floor(dayWithinYear / 28);
-                day = dayWithinYear % 28;
-                const monthNames = [
-                    "January", "February", "March", "April", "May", "June", "Dia",
-                    "July", "August", "September", "October", "November", "December"
-                ];
-                monthName = monthNames[month];
-            }
+// Did the Gregorian span [aug18, year+1 aug 18) contain a Feb 29?
+// Equivalent to asking: was (gregYear+1) a Gregorian leap year?
+function isPhYearLeap(phYear) {
+  // phYear 0 starts Aug 18 1989; the Feb inside is Feb 1990 → check 1990
+  // phYear N starts Aug 18 (1989+N); the Feb inside is Feb (1990+N)
+  const y = 1990 + phYear; // works for negatives too
+  return (y % 4 === 0 && y % 100 !== 0) || (y % 400 === 0);
+}
+function phYearLength(phYear) {
+  return isPhYearLeap(phYear) ? 365 : 364;
+}
 
-            // PUJT Time calculation
-            const localHours = gregorianDate.getHours();
-            const localMinutes = String(gregorianDate.getMinutes()).padStart(2, '0');
-            const timezoneOffsetMinutes = gregorianDate.getTimezoneOffset();
-            const localUTCOffset = -timezoneOffsetMinutes / 60; // Convert to hours, positive east of UTC
-            const pujtHours = (localHours - localUTCOffset + 1 + 24) % 24; // PUJT = UTC + 1
-            const pujtTimezoneOffset = localUTCOffset - 1; // Relative to Belgium (PUJT+0 = UTC+1)
-            const pujtTimezoneLabel = `PUJT${pujtTimezoneOffset >= 0 ? '+' + pujtTimezoneOffset : pujtTimezoneOffset}`;
+// Convert absolute "days since anchor" (can be negative) to {phYear, monthIdx, day, isLeapDay}
+// monthIdx 0..12 (or null if leap day), day 0-indexed within month (or 0 for leap day)
+function daysToPhilomena(absDays) {
+  let year = 0;
+  let d = absDays;
+  if (d >= 0) {
+    while (true) {
+      const len = phYearLength(year);
+      if (d < len) break;
+      d -= len;
+      year++;
+    }
+  } else {
+    // walk backwards
+    while (d < 0) {
+      year--;
+      d += phYearLength(year);
+    }
+  }
+  // Now 0 <= d < phYearLength(year)
+  if (isPhYearLeap(year) && d === 364) {
+    return { year, monthIdx: null, day: 0, isLeapDay: true };
+  }
+  const monthIdx = Math.floor(d / 28);
+  const day = d % 28;
+  return { year, monthIdx, day, isLeapDay: false };
+}
 
-            const yearDisplay = year < 0 ? `${-year} BC` : year;
+// Inverse: phYear + monthIdx (or leap) + day(0-indexed) → absDays
+function philomenaToDays(phYear, monthIdx, day) {
+  let total = 0;
+  if (phYear >= 0) {
+    for (let y = 0; y < phYear; y++) total += phYearLength(y);
+  } else {
+    for (let y = -1; y >= phYear; y--) total -= phYearLength(y);
+  }
+  if (monthIdx === null) {
+    total += 364; // leap day
+  } else {
+    total += monthIdx * 28 + day;
+  }
+  return total;
+}
 
-            return {
-                year: yearDisplay,
-                month,
-                monthName,
-                day,
-                pujtTime: `${String(Math.floor(pujtHours)).padStart(2, '0')}:${localMinutes}`,
-                pujtTimezone: pujtTimezoneLabel
-            };
-        }
+// Get current PUJT moment: returns ms-since-anchor (PUJT-aligned)
+function pujtNowMs() {
+  return Date.now() - ANCHOR_UTC_MS;
+}
 
-        // Display current date and time
-        const now = new Date();
-        const currentResult = convertToPhilomena(now);
-        document.getElementById('result').innerText =
-            `Current Date in Philomena:\nYear ${currentResult.year}, Month ${currentResult.month} (${currentResult.monthName}), Day ${currentResult.day}\n` +
-            `Time in PUJT: ${currentResult.pujtTime} ${currentResult.pujtTimezone}`;
+// Get PUJT day index (floor) and time-of-day-ms
+function pujtBreakdown() {
+  const ms = pujtNowMs();
+  const days = Math.floor(ms / MS_PER_DAY);
+  const tod = ms - days * MS_PER_DAY;
+  return { days, tod };
+}
 
-        // Handle date conversion form
-        document.getElementById('conversionForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const value = document.getElementById('gregorianDate').value;
-            const [year, month, day] = value.split('-').map(Number);
-            const gregorianDateInput = new Date(year, month - 1, day, 0, 0, 0); // Set to midnight local time
-            const convertedDate = convertToPhilomena(gregorianDateInput);
-            document.getElementById('conversionResult').innerText =
-                `Converted Date in Philomena:\nYear ${convertedDate.year}, Month ${convertedDate.month} (${convertedDate.monthName}), Day ${convertedDate.day}`;
-        });
+// The Gregorian date corresponding to a Philomena (year, monthIdx|null, day) — PUJT midnight
+function philomenaToGregorian(phYear, monthIdx, day) {
+  const abs = philomenaToDays(phYear, monthIdx, day);
+  // In PUJT, abs days from anchor → that PUJT-midnight in UTC = ANCHOR_UTC_MS + abs*MS_PER_DAY
+  // Render as the Gregorian *date* in PUJT (= UTC + 60min)
+  const utc = new Date(ANCHOR_UTC_MS + abs * MS_PER_DAY);
+  // Shift by +60 min to get the wall-clock date in PUJT
+  const pujt = new Date(utc.getTime() + PUJT_OFFSET_MIN * 60000);
+  return {
+    y: pujt.getUTCFullYear(),
+    m: pujt.getUTCMonth(), // 0-indexed
+    d: pujt.getUTCDate()
+  };
+}
 
-        // Update footer
-        const currentYearPC = currentResult.year;
-        const siteCreationYearPC = currentYearPC > 35 ? ` - ${currentYearPC}` : '';
-        document.querySelector('.footer').innerText = `Site Code Created by Grok - 35${siteCreationYearPC}`;
-    </script>
+const GREG_MONTHS_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+/* ---------- State ---------- */
+const state = {
+  // viewing: phYear, viewMonthIdx (number 0..12) OR 'leap'
+  phYear: 0,
+  viewMonth: 0, // 0..12 or 'leap'
+  // selected day index within month (0..27) or null
+  selectedDay: null,
+  // timezone offset in minutes from UTC (positive = east) — chosen by user
+  tzOffsetMin: -new Date().getTimezoneOffset()
+};
+
+/* ---------- Rendering ---------- */
+function pad(n, w=2) { return String(n).padStart(w, "0"); }
+
+function fmtPUJTOffsetForLocal(offsetMin) {
+  // PUJT = UTC + 60. local offset is offsetMin from UTC.
+  // PUJT offset relative to local = (60 - offsetMin) - well actually if local = UTC+X, then PUJT = local + (60-X)
+  // So local time in PUJT terms: PUJT = X-60 from local? Let's express as PUJT offset from local
+  const diff = offsetMin - 60; // minutes local is ahead of PUJT
+  const sign = diff >= 0 ? "+" : "-";
+  const abs = Math.abs(diff);
+  const h = Math.floor(abs/60), m = abs%60;
+  return "PUJT" + sign + (m ? `${h}:${pad(m)}` : `${h}`);
+}
+function fmtUTCOffset(offsetMin) {
+  const sign = offsetMin >= 0 ? "+" : "-";
+  const abs = Math.abs(offsetMin);
+  const h = Math.floor(abs/60), m = abs%60;
+  return "UTC" + sign + (m ? `${h}:${pad(m)}` : `${h}`);
+}
+
+function renderClock() {
+  // Show time in the selected timezone (not hardcoded PUJT)
+  const tzMs = Date.now() + state.tzOffsetMin * 60000;
+  const tod = ((tzMs % MS_PER_DAY) + MS_PER_DAY) % MS_PER_DAY;
+  const h = Math.floor(tod / 3600000);
+  const m = Math.floor((tod % 3600000) / 60000);
+  const s = Math.floor((tod % 60000) / 1000);
+  const msFrac = tod % 1000;
+  document.getElementById("t-hms").textContent = `${pad(h)}:${pad(m)}:${pad(s)}`;
+  document.getElementById("t-ms").textContent = "." + pad(msFrac, 3);
+
+  document.getElementById("local-offset").textContent = fmtUTCOffset(state.tzOffsetMin);
+  document.getElementById("pujt-offset").textContent = fmtPUJTOffsetForLocal(state.tzOffsetMin);
+
+  // Update clock eyebrow label to reflect selected zone
+  const sel = document.getElementById("tz");
+  const label = sel.options[sel.selectedIndex]?.textContent.split("·")[1]?.trim() || "LOCAL TIME";
+  document.getElementById("tz-label").textContent = label.toUpperCase();
+}
+
+function renderTodayCard() {
+  const { days, tod } = pujtBreakdown();
+  const ph = daysToPhilomena(days);
+  const yearLabel = ph.year >= 0
+    ? `Year ${ph.year} <span class="accent">AC</span>`
+    : `Year ${-ph.year} <span class="accent">BC</span>`;
+  document.getElementById("ph-year").innerHTML = yearLabel;
+
+  if (ph.isLeapDay) {
+    document.getElementById("ph-month").innerHTML = `<span style="color:var(--leap)">Leap Year Day</span>`;
+    document.getElementById("ph-day").textContent = "—";
+  } else {
+    const mn = MONTHS[ph.monthIdx];
+    document.getElementById("ph-month").innerHTML = ph.monthIdx === 6
+      ? `<span class="accent">${mn}</span>`
+      : mn;
+    document.getElementById("ph-day").textContent = `${ph.day} / 27`;
+  }
+
+  // doy = days into the year
+  const doyCount = ph.isLeapDay ? 364 : (ph.monthIdx * 28 + ph.day);
+  const totalDays = phYearLength(ph.year);
+  document.getElementById("doy").textContent = `${doyCount} / ${totalDays - 1}`;
+
+  // stamp
+  const monthPart = ph.isLeapDay ? "L" : pad(ph.monthIdx, 2);
+  const dayPart = ph.isLeapDay ? "00" : pad(ph.day, 2);
+  const yearStr = (ph.year >= 0 ? "Y" + ph.year : "Y-" + (-ph.year));
+  document.getElementById("ph-stamp").textContent = `${yearStr}.${monthPart}.${dayPart}`;
+}
+
+function renderMonthStrip() {
+  const strip = document.getElementById("month-strip");
+  strip.innerHTML = "";
+  for (let i = 0; i < 13; i++) {
+    const btn = document.createElement("button");
+    btn.className = "month-tab" + (i === 6 ? " dia" : "") + (state.viewMonth === i ? " active" : "");
+    btn.innerHTML = `<span class="num">${pad(i,2)}</span>${MONTHS[i]}`;
+    btn.onclick = () => { state.viewMonth = i; render(); };
+    strip.appendChild(btn);
+  }
+  if (isPhYearLeap(state.phYear)) {
+    const btn = document.createElement("button");
+    btn.className = "month-tab leap" + (state.viewMonth === "leap" ? " active" : "");
+    btn.innerHTML = `<span class="num">★</span>Leap Year Day`;
+    btn.onclick = () => { state.viewMonth = "leap"; render(); };
+    strip.appendChild(btn);
+  }
+}
+
+function renderWeekdays() {
+  const wd = document.getElementById("weekdays");
+  wd.innerHTML = "";
+  if (state.viewMonth === "leap") return;
+  WEEKDAYS.forEach(w => {
+    const el = document.createElement("div");
+    el.className = "weekday";
+    el.textContent = w;
+    wd.appendChild(el);
+  });
+}
+
+function renderGrid() {
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+  // current today for highlight
+  const { days } = pujtBreakdown();
+  const today = daysToPhilomena(days);
+
+  if (state.viewMonth === "leap") {
+    const greg = philomenaToGregorian(state.phYear, null, 0);
+    const cell = document.createElement("div");
+    cell.className = "day leap-day";
+    const isToday = today.year === state.phYear && today.isLeapDay;
+    if (isToday) cell.classList.add("today");
+    cell.innerHTML = `
+      <div>
+        <div class="leap-label">Leap Year Day · belongs to no month</div>
+        <div style="font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--fg-faint); letter-spacing:0.1em; margin-top:6px;">
+          ${GREG_MONTHS_SHORT[greg.m]} ${greg.d}, ${greg.y}
+        </div>
+      </div>
+      <div class="dnum">★</div>
+    `;
+    grid.appendChild(cell);
+    return;
+  }
+
+  const monthIdx = state.viewMonth;
+  for (let d = 0; d < 28; d++) {
+    const cell = document.createElement("div");
+    cell.className = "day";
+    const greg = philomenaToGregorian(state.phYear, monthIdx, d);
+    const isToday = !today.isLeapDay && today.year === state.phYear && today.monthIdx === monthIdx && today.day === d;
+    if (isToday) cell.classList.add("today");
+    if (state.selectedDay === d) cell.classList.add("selected");
+    cell.innerHTML = `
+      <div class="dnum">${d}</div>
+      <div class="greg">${GREG_MONTHS_SHORT[greg.m]} ${greg.d}</div>
+    `;
+    cell.onclick = () => { state.selectedDay = d; render(); };
+    grid.appendChild(cell);
+  }
+}
+
+function renderHeader() {
+  const monthEl = document.getElementById("cal-month");
+  const yearEl = document.getElementById("cal-year");
+  if (state.viewMonth === "leap") {
+    monthEl.textContent = "Leap Year Day";
+    monthEl.className = "month-name";
+    monthEl.style.color = "var(--leap)";
+  } else {
+    monthEl.style.color = "";
+    monthEl.textContent = MONTHS[state.viewMonth];
+    monthEl.className = "month-name" + (state.viewMonth === 6 ? " dia" : "");
+  }
+  const yLabel = state.phYear >= 0
+    ? `YEAR ${state.phYear} · AFTER CUNK`
+    : `YEAR ${-state.phYear} · BEFORE CUNK`;
+  yearEl.textContent = yLabel;
+}
+
+function render() {
+  renderHeader();
+  renderMonthStrip();
+  renderWeekdays();
+  renderGrid();
+  renderTodayCard();
+}
+
+/* ---------- Navigation ---------- */
+document.getElementById("prev-month").onclick = () => {
+  if (state.viewMonth === "leap") {
+    state.viewMonth = 12;
+  } else if (state.viewMonth === 0) {
+    state.phYear--;
+    state.viewMonth = isPhYearLeap(state.phYear) ? "leap" : 12;
+  } else {
+    state.viewMonth--;
+  }
+  render();
+};
+document.getElementById("next-month").onclick = () => {
+  if (state.viewMonth === "leap") {
+    state.phYear++;
+    state.viewMonth = 0;
+  } else if (state.viewMonth === 12) {
+    if (isPhYearLeap(state.phYear)) {
+      state.viewMonth = "leap";
+    } else {
+      state.phYear++;
+      state.viewMonth = 0;
+    }
+  } else {
+    state.viewMonth++;
+  }
+  render();
+};
+document.getElementById("prev-year").onclick = () => { state.phYear--; if (state.viewMonth === "leap" && !isPhYearLeap(state.phYear)) state.viewMonth = 12; render(); };
+document.getElementById("next-year").onclick = () => { state.phYear++; if (state.viewMonth === "leap" && !isPhYearLeap(state.phYear)) state.viewMonth = 12; render(); };
+document.getElementById("today-btn").onclick = () => {
+  const { days } = pujtBreakdown();
+  const t = daysToPhilomena(days);
+  state.phYear = t.year;
+  state.viewMonth = t.isLeapDay ? "leap" : t.monthIdx;
+  state.selectedDay = t.isLeapDay ? null : t.day;
+  render();
+};
+
+/* ---------- Timezone picker ---------- */
+const TZ_OPTIONS = [
+  { label: "PUJT+0 · Belgium (GMT+1)", offset: 60 },
+  { label: "PUJT-1 · GMT / London", offset: 0 },
+  { label: "PUJT-5 · EST / New York", offset: -300 },
+  { label: "PUJT-6 · CST / Chicago", offset: -360 },
+  { label: "PUJT-7 · MST / Denver", offset: -420 },
+  { label: "PUJT-8 · PST / Los Angeles", offset: -480 },
+  { label: "PUJT+8 · JST / Tokyo", offset: 540 },
+  { label: "PUJT+7 · IST / Mumbai", offset: 330 },
+  { label: "PUJT+9 · AEST / Sydney", offset: 600 },
+  { label: "PUJT+11 · NZST / Auckland", offset: 720 }
+];
+const tzSelect = document.getElementById("tz");
+const localOff = -new Date().getTimezoneOffset();
+let preselect = TZ_OPTIONS.find(o => o.offset === localOff);
+if (!preselect) {
+  TZ_OPTIONS.unshift({ label: `${fmtPUJTOffsetForLocal(localOff)} · Your local zone`, offset: localOff });
+  preselect = TZ_OPTIONS[0];
+}
+TZ_OPTIONS.forEach((o, i) => {
+  const opt = document.createElement("option");
+  opt.value = String(o.offset);
+  opt.textContent = o.label;
+  if (o === preselect) opt.selected = true;
+  tzSelect.appendChild(opt);
+});
+state.tzOffsetMin = preselect.offset;
+tzSelect.onchange = () => { state.tzOffsetMin = parseInt(tzSelect.value, 10); renderClock(); render(); };
+
+/* ---------- Boot ---------- */
+function init() {
+  const { days } = pujtBreakdown();
+  const t = daysToPhilomena(days);
+  state.phYear = t.year;
+  state.viewMonth = t.isLeapDay ? "leap" : t.monthIdx;
+  state.selectedDay = t.isLeapDay ? null : t.day;
+  render();
+  renderClock();
+  setInterval(renderClock, 50);
+  // re-render the today card every minute (in case day rolls over)
+  setInterval(renderTodayCard, 60000);
+}
+init();
+</script>
 </body>
 </html>
